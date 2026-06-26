@@ -3,29 +3,27 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>해외주식 배당 설계기 · 월배당 포트폴리오 계산기</title>
+<title>해외주식 배당 설계기 · 월배당 + 총수익 시뮬레이터</title>
 <meta property="og:title" content="해외주식 배당 설계기">
-<meta property="og:description" content="목표 월배당으로 필요 투자금을, 투자금으로 예상 월배당을 계산. 고배당 ETF · 커버드콜 시나리오 비교.">
+<meta property="og:description" content="목표 월배당 ↔ 필요 투자금, 고배당·커버드콜·초고배당 비교, 총수익(배당+주가) N년 시뮬레이션.">
 <style>
   :root{
     --bg:#0f1729; --card:#1a2235; --card2:#222c44; --line:#2e3a55;
     --txt:#e8edf7; --sub:#9fb0cc; --dim:#6c7d9c;
-    --accent:#4f9dff; --accent2:#7c6cff;
-    --green:#2ecc8f; --gold:#ffb84d; --red:#ff6b7a;
-    --r:14px;
+    --accent:#4f9dff; --accent2:#7c6cff; --accent3:#ff6b7a;
+    --green:#2ecc8f; --gold:#ffb84d; --red:#ff6b7a; --r:14px;
   }
   *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
   body{margin:0;background:linear-gradient(180deg,#0c1322,#0f1729 40%);color:var(--txt);
     font-family:'Pretendard',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,'Malgun Gothic',sans-serif;
     line-height:1.5;font-size:15px;padding-bottom:60px}
-  .wrap{max-width:760px;margin:0 auto;padding:18px 14px}
+  .wrap{max-width:780px;margin:0 auto;padding:18px 14px}
   h1{font-size:22px;margin:6px 0 2px;letter-spacing:-.5px}
   .tagline{color:var(--sub);font-size:13px;margin-bottom:16px}
   .card{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:16px;margin-bottom:14px}
-  .card h2{font-size:15px;margin:0 0 12px;color:var(--txt);display:flex;align-items:center;gap:8px}
+  .card h2{font-size:15px;margin:0 0 12px;display:flex;align-items:center;gap:8px}
   .card h2 .ico{font-size:17px}
 
-  /* global controls */
   .globals{display:flex;gap:10px;flex-wrap:wrap}
   .field{flex:1;min-width:130px}
   .field label{display:block;font-size:12px;color:var(--sub);margin-bottom:5px}
@@ -40,25 +38,22 @@
   .toggle.on .sw::after{left:18px}
   .toggle span{font-size:13px;font-weight:600}
 
-  /* portfolio tabs */
-  .ptabs{display:flex;gap:8px;margin-bottom:14px}
-  .ptab{flex:1;padding:13px 8px;border-radius:12px;border:1px solid var(--line);background:var(--card);
+  .ptabs{display:flex;gap:7px;margin-bottom:14px}
+  .ptab{flex:1;padding:11px 5px;border-radius:12px;border:1px solid var(--line);background:var(--card);
     text-align:center;cursor:pointer;transition:.15s}
-  .ptab .t{font-weight:700;font-size:15px}
-  .ptab .d{font-size:11px;color:var(--dim);margin-top:3px}
-  .ptab.act{border-color:transparent}
+  .ptab .t{font-weight:700;font-size:14px}
+  .ptab .d{font-size:10.5px;color:var(--dim);margin-top:3px}
   .ptab.act.hi{background:linear-gradient(135deg,#1d3a5f,#234a78);border-color:var(--accent)}
   .ptab.act.cc{background:linear-gradient(135deg,#3a2d63,#4a3580);border-color:var(--accent2)}
-  .ptab.act .d{color:#cdd9ee}
+  .ptab.act.ho{background:linear-gradient(135deg,#5a2230,#7a2a3c);border-color:var(--accent3)}
+  .ptab.act .d{color:#e2dbe9}
 
-  /* mode toggle */
   .modes{display:flex;background:var(--card2);border-radius:11px;padding:4px;margin-bottom:14px}
-  .mode{flex:1;text-align:center;padding:10px;border-radius:8px;font-size:13.5px;font-weight:600;
+  .mode{flex:1;text-align:center;padding:10px 4px;border-radius:8px;font-size:12.5px;font-weight:600;
     color:var(--sub);cursor:pointer;transition:.15s}
   .mode.act{background:var(--accent);color:#fff}
-  .modes.cc .mode.act{background:var(--accent2)}
+  .modes.cc .mode.act{background:var(--accent2)} .modes.ho .mode.act{background:var(--accent3)}
 
-  .inrow{margin-bottom:6px}
   .inrow label{font-size:13px;color:var(--sub);display:block;margin-bottom:6px}
   .biginput{display:flex;align-items:center;background:var(--card2);border:1px solid var(--line);border-radius:11px;padding:4px 14px}
   .biginput input{flex:1;background:none;border:none;color:var(--txt);font-size:24px;font-weight:800;padding:10px 0;text-align:right}
@@ -66,157 +61,168 @@
   .biginput .unit{font-size:16px;color:var(--sub);font-weight:700;padding-left:10px}
   .hint{font-size:12px;color:var(--dim);margin-top:7px}
 
-  /* holdings table */
   table{width:100%;border-collapse:collapse;font-size:13px}
-  th,td{padding:9px 6px;text-align:right;border-bottom:1px solid var(--line)}
-  th{color:var(--sub);font-size:11.5px;font-weight:600;text-align:right}
+  th,td{padding:8px 5px;text-align:right;border-bottom:1px solid var(--line);vertical-align:top}
+  th{color:var(--sub);font-size:11px;font-weight:600}
   th:first-child,td:first-child{text-align:left}
-  td.tk{font-weight:700}
-  td.tk small{display:block;color:var(--dim);font-weight:400;font-size:10.5px;max-width:130px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-  .cellin{width:62px;background:var(--card2);border:1px solid var(--line);color:var(--txt);
+  .tkin{width:60px;font-weight:700;font-size:13px}
+  .nmin{width:96px;font-size:10.5px;color:var(--sub);margin-top:3px}
+  .tkin,.nmin{background:var(--card2);border:1px solid var(--line);color:var(--txt);border-radius:6px;padding:4px 6px}
+  .tkin:focus,.nmin:focus,.cellin:focus{outline:none;border-color:var(--accent)}
+  .cellin{width:56px;background:var(--card2);border:1px solid var(--line);color:var(--txt);
     border-radius:7px;padding:6px 5px;font-size:13px;text-align:right;font-weight:600}
-  .cellin:focus{outline:none;border-color:var(--accent)}
-  .allocin{width:58px}
-  .res{color:var(--green);font-weight:700}
-  .badge{display:inline-block;font-size:10px;padding:2px 6px;border-radius:5px;background:#2a3344;margin-left:5px}
-  .mb{background:#2a3a2f;color:var(--green)}
-  .qb{background:#3a2f2f;color:var(--gold)}
+  .allocin{width:50px}
+  .res{color:var(--green);font-weight:700;font-size:13px}
+  .resw{color:var(--red)}
+  .sub2{display:block;color:var(--dim);font-weight:400;font-size:10px;margin-top:2px}
+  .rbadge{display:inline-block;font-size:9.5px;padding:1px 5px;border-radius:5px;margin-left:4px;font-weight:700;vertical-align:middle}
+  .rlow{background:#23402f;color:#3ddc97} .rmid{background:#3a3320;color:#ffce6b}
+  .rhigh{background:#3d2a1c;color:#ff9d52} .rxh{background:#3d1f24;color:#ff6b7a}
+  .navw{display:block;font-size:9.5px;color:var(--red);margin-top:2px}
+  .delx{background:none;border:none;color:var(--dim);cursor:pointer;font-size:13px;padding:0 0 0 4px}
+  .delx:hover{color:var(--red)}
+  .freq{font-size:9px;color:var(--dim)}
 
-  .sumbar{display:flex;justify-content:space-between;align-items:center;padding:8px 6px 2px;font-size:12px;color:var(--sub)}
-  .sumbar b{color:var(--txt)}
-  .warn{color:var(--gold)}
+  .sumbar{font-size:12px;color:var(--sub);padding:10px 4px 2px;display:flex;flex-wrap:wrap;gap:4px 14px;justify-content:space-between}
+  .sumbar b{color:var(--txt)} .warn{color:var(--gold)}
+  .totret{padding:8px 4px 0;font-size:12px;color:var(--sub)}
+  .totret b{color:var(--txt)}
 
-  /* result */
   .result{background:linear-gradient(135deg,#16263f,#1a2f4a);border:1px solid var(--accent);
     border-radius:var(--r);padding:18px;text-align:center;margin-bottom:14px}
   .result.cc{background:linear-gradient(135deg,#251c42,#2e2353);border-color:var(--accent2)}
+  .result.ho{background:linear-gradient(135deg,#3a1822,#52232f);border-color:var(--accent3)}
   .result .lab{font-size:13px;color:var(--sub)}
-  .result .big{font-size:34px;font-weight:800;margin:6px 0 2px;letter-spacing:-1px}
-  .result .sub{font-size:13px;color:var(--sub)}
-  .result .raw{font-size:12px;color:var(--dim);margin-top:6px}
+  .result .big{font-size:33px;font-weight:800;margin:6px 0 2px;letter-spacing:-1px}
+  .result .sub{font-size:13px;color:var(--sub)} .result .raw{font-size:12px;color:var(--dim);margin-top:6px}
 
-  .btnrow{display:flex;gap:8px;margin-top:10px}
-  .btn{flex:1;padding:10px;border-radius:9px;border:1px solid var(--line);background:var(--card2);
+  .btnrow{display:flex;gap:8px;margin-top:12px;flex-wrap:wrap}
+  .btn{flex:1;min-width:88px;padding:10px;border-radius:9px;border:1px solid var(--line);background:var(--card2);
     color:var(--sub);font-size:12.5px;font-weight:600;cursor:pointer}
   .btn:active{background:var(--line)}
 
-  .disc{font-size:11.5px;color:var(--dim);line-height:1.6;margin-top:4px}
+  /* simulation */
+  .simctl{display:flex;gap:10px;align-items:flex-end;flex-wrap:wrap;margin-bottom:14px}
+  .simctl .field{min-width:90px;flex:0 0 auto}
+  .simctl .field input{width:84px}
+  .segtog{display:flex;background:var(--card2);border-radius:9px;padding:3px}
+  .segtog div{padding:8px 12px;border-radius:7px;font-size:12.5px;font-weight:600;color:var(--sub);cursor:pointer}
+  .segtog div.act{background:var(--accent);color:#fff}
+  .simgrid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  .simbox{background:var(--card2);border:1px solid var(--line);border-radius:11px;padding:12px}
+  .simbox .l{font-size:11.5px;color:var(--sub)} .simbox .v{font-size:18px;font-weight:800;margin-top:3px}
+  .simbox.full{grid-column:1/3;text-align:center}
+  .simbox.full .v{font-size:24px}
+  .pos{color:var(--green)} .neg{color:var(--red)}
+  .simnote{font-size:12px;color:var(--dim);margin-top:10px;line-height:1.6}
+
+  .disc{font-size:11.5px;color:var(--dim);line-height:1.6}
   details summary{cursor:pointer;color:var(--sub);font-size:13px;font-weight:600}
   a{color:var(--accent)}
-  @media(max-width:520px){
-    th,td{padding:8px 3px}
-    td.tk small{max-width:84px}
-    .cellin{width:50px}
-    .allocin{width:48px}
-    .result .big{font-size:28px}
+  @media(max-width:540px){
+    th,td{padding:7px 3px} .nmin{width:74px} .cellin{width:48px} .allocin{width:44px} .tkin{width:52px}
+    .result .big{font-size:27px} .simbox .v{font-size:16px}
   }
 </style>
 </head>
 <body>
 <div class="wrap">
   <h1>💵 해외주식 배당 설계기</h1>
-  <div class="tagline">목표 월배당 ↔ 필요 투자금을 양방향으로. 고배당 ETF와 커버드콜 시나리오를 따로 짜서 비교하세요.</div>
+  <div class="tagline">목표 월배당 ↔ 필요 투자금을 양방향으로. 고배당·커버드콜·초고배당을 비교하고, <b style="color:var(--sub)">배당만이 아니라 주가까지 합친 총수익</b>으로 N년 시뮬레이션까지.</div>
 
-  <!-- 전역 설정 -->
   <div class="card">
     <h2><span class="ico">⚙️</span> 기본 설정</h2>
     <div class="globals">
-      <div class="field">
-        <label>원/달러 환율</label>
-        <input id="fx" type="number" inputmode="decimal" value="1380">
-      </div>
-      <div class="field" style="flex:0 0 auto">
-        <label>미국 배당세 15%</label>
-        <div class="toggle on" id="taxToggle"><div class="sw"></div><span>실수령액 표시</span></div>
-      </div>
+      <div class="field"><label>원/달러 환율</label><input id="fx" type="number" inputmode="decimal" value="1380"></div>
+      <div class="field" style="flex:0 0 auto"><label>미국 배당세 15%</label>
+        <div class="toggle on" id="taxToggle"><div class="sw"></div><span>실수령액 반영</span></div></div>
     </div>
-    <div class="hint" id="taxHint">미국 ETF/주식 배당은 현지에서 15% 원천징수됩니다. 켜면 세후 실수령액 기준으로 계산합니다.</div>
+    <div class="hint">미국 배당은 현지에서 15% 원천징수됩니다. 켜면 세후 기준으로 계산합니다.</div>
   </div>
 
-  <!-- 포트폴리오 탭 -->
   <div class="ptabs">
-    <div class="ptab act hi" id="ptHi" onclick="switchTab('hi')">
-      <div class="t">📈 고배당 ETF</div>
-      <div class="d">안정·저변동 (3~5%)</div>
-    </div>
-    <div class="ptab" id="ptCc" onclick="switchTab('cc')">
-      <div class="t">🎯 커버드콜</div>
-      <div class="d">고수익 월배당 (7~15%)</div>
-    </div>
+    <div class="ptab act hi" id="ptHi" onclick="switchTab('hi')"><div class="t">📈 고배당 안정</div><div class="d">ETF·우량주 3~7%</div></div>
+    <div class="ptab" id="ptCc" onclick="switchTab('cc')"><div class="t">🎯 커버드콜</div><div class="d">월배당 7~15%</div></div>
+    <div class="ptab" id="ptHo" onclick="switchTab('ho')"><div class="t">🔥 초고배당</div><div class="d">고위험 20~90%</div></div>
   </div>
 
-  <!-- 모드 -->
   <div class="modes" id="modes">
     <div class="mode act" id="modeA" onclick="switchMode('A')">🎯 목표 월배당 → 필요 투자금</div>
     <div class="mode" id="modeB" onclick="switchMode('B')">💰 투자금 → 예상 월배당</div>
   </div>
 
-  <!-- 입력 -->
   <div class="card">
     <div id="inputA" class="inrow">
       <label>매달 받고 싶은 금액 (세후 실수령 기준)</label>
-      <div class="biginput">
-        <input id="targetMan" type="number" inputmode="numeric" value="200">
-        <span class="unit">만원/월</span>
-      </div>
+      <div class="biginput"><input id="targetMan" type="number" inputmode="numeric" value="200"><span class="unit">만원/월</span></div>
       <div class="hint">예: 100 = 월 100만원, 200 = 월 200만원</div>
     </div>
     <div id="inputB" class="inrow" style="display:none">
       <label>투자 가능한 금액</label>
-      <div class="biginput">
-        <input id="investMan" type="number" inputmode="numeric" value="10000">
-        <span class="unit">만원</span>
-      </div>
+      <div class="biginput"><input id="investMan" type="number" inputmode="numeric" value="10000"><span class="unit">만원</span></div>
       <div class="hint">예: 10000 = 1억원, 50000 = 5억원</div>
     </div>
   </div>
 
-  <!-- 결과 -->
   <div class="result" id="result">
-    <div class="lab" id="resLab">필요 투자금</div>
+    <div class="lab" id="resLab">필요한 총 투자금</div>
     <div class="big" id="resBig">–</div>
     <div class="sub" id="resSub"></div>
     <div class="raw" id="resRaw"></div>
   </div>
 
-  <!-- 종목 구성 -->
   <div class="card">
     <h2><span class="ico">📊</span> 종목 구성 <span id="tabName" style="color:var(--sub);font-weight:400;font-size:13px"></span></h2>
     <div style="overflow-x:auto">
       <table id="tbl">
-        <thead>
-          <tr>
-            <th>종목</th>
-            <th>시세($)</th>
-            <th>배당률(%)</th>
-            <th>배분(%)</th>
-            <th id="thRes">투자금</th>
-          </tr>
-        </thead>
+        <thead><tr>
+          <th>종목 / 위험</th><th>시세($)</th><th>배당<br>(%)</th><th>주가전망<br>(%/년)</th><th>배분<br>(%)</th><th id="thRes">결과</th>
+        </tr></thead>
         <tbody id="tbody"></tbody>
       </table>
     </div>
+    <div class="totret" id="totret"></div>
     <div class="sumbar">
       <span>배분 합계: <b id="allocSum">0%</b> <span id="allocWarn" class="warn"></span></span>
-      <span>가중 평균 배당률: <b id="blendY">0%</b></span>
+      <span>가중 배당률: <b id="blendY">0%</b></span>
     </div>
     <div class="btnrow">
+      <button class="btn" onclick="addRow()">➕ 종목 추가</button>
       <button class="btn" onclick="evenSplit()">⚖️ 균등 배분</button>
       <button class="btn" onclick="resetData()">↺ 기본값 복원</button>
     </div>
   </div>
 
+  <div class="card">
+    <h2><span class="ico">📈</span> N년 후 총수익 시뮬레이션</h2>
+    <div class="simctl">
+      <div class="field"><label>기간</label><input id="simN" type="number" inputmode="numeric" value="10"><span class="freq"> 년</span></div>
+      <div class="segtog" id="simMode">
+        <div class="act" id="simWd" onclick="setSim('wd')">💸 배당 인출</div>
+        <div id="simRe" onclick="setSim('re')">🔁 배당 재투자</div>
+      </div>
+    </div>
+    <div class="simgrid" id="simgrid"></div>
+    <div class="simnote" id="simnote"></div>
+  </div>
+
   <details class="card">
-    <summary>ℹ️ 계산 방식 · 데이터 안내 · 주의사항</summary>
+    <summary>ℹ️ 계산 방식 · 데이터 근거 · 꼭 읽을 주의사항</summary>
     <div class="disc" style="margin-top:10px">
-      <p><b>계산 방식</b><br>
-      · 가중 평균 배당률 = Σ(종목 배분% × 배당률)<br>
-      · <b>목표→투자금</b>: 필요 투자금 = (목표 월배당 ×12) ÷ 가중배당률. 세금 ON이면 목표액을 세전으로 환산(÷0.85) 후 계산.<br>
-      · <b>투자금→배당</b>: 종목별 투자금 = 총액 × 배분%, 연배당 = 투자금 × 배당률, 월배당 = 연배당 ÷ 12 (세금 ON이면 ×0.85).</p>
-      <p><b>데이터</b><br>
-      시세·배당률은 <b id="refDate">2026-06 기준 근사치</b>의 참고용 스냅샷입니다. 실제 값은 수시로 변하니 표의 숫자를 직접 수정해 쓰세요. 수정값은 브라우저에 자동 저장됩니다.</p>
-      <p><b>⚠️ 주의</b><br>
-      본 도구는 투자 권유가 아닌 <b>계산·시뮬레이션 보조</b>입니다. 커버드콜 ETF는 배당률이 높은 대신 주가 상승이 제한되고 원금 손실·배당 변동 위험이 있습니다. 배당률(과거 기준)은 미래 수익을 보장하지 않으며, 환율·세금·증권사 수수료에 따라 실수령액이 달라집니다.</p>
+      <p><b>종목 선정 근거</b><br>
+      "최적 종목"이 아니라 <b>거래량·운용규모가 크고 한국 투자자 보유가 많은 대표 종목</b>을 출발점으로 넣었습니다. 시세·배당률·주가전망·배분은 모두 직접 수정하고, 종목도 추가/삭제하세요.</p>
+      <p><b>계산식</b><br>
+      · 가중 배당률 = Σ(배분% × 배당률)<br>
+      · 목표→투자금: 필요투자금 = (목표월배당×12) ÷ 가중배당률 (세금ON이면 목표를 ÷0.85로 세전 환산)<br>
+      · 투자금→배당: 종목별 월배당 = 투자금×배당률÷12 ×(세금ON ? 0.85)<br>
+      · <b>총수익 시뮬</b>: 매년 주가는 '주가전망%'만큼 변하고 배당은 그 해 평가액 기준으로 발생. <b>인출</b>=배당을 매년 빼서 쓰고 원금은 주가대로 변동 / <b>재투자</b>=세후 배당으로 같은 종목을 더 사서 복리.</p>
+      <p><b>⚠️ 고배당의 함정 (꼭 이해하세요)</b><br>
+      배당률이 높다고 부자가 되는 게 아닙니다. 커버드콜·초고배당 ETF는 <b>주가 상승을 포기하거나 원금을 깎아 배당으로 돌려주는(NAV 침식)</b> 구조가 많아요. 그래서 '주가전망%'를 음수로 넣었고, <b>배당+주가를 합친 총수익</b>으로 봐야 진짜 수익입니다. 표시 배당률(과거 기준)은 미래를 보장하지 않고, 커버드콜은 변동성이 낮아지면 배당이 갑자기 줄 수 있습니다.</p>
+      <p><b>분산 vs 몰빵</b><br>
+      ETF는 그 자체로 수십~수백 종목에 분산돼 있어 단일 ETF 몰빵도 개별주 몰빵과는 위험이 다릅니다. 다만 한 종목/전략에 몰빵하면 그 배당이 줄거나 운용이 중단될 때 수입 전체가 흔들립니다. 분산은 '수익률을 조금 낮춰 안정성을 사는 것'이라 정답은 본인 성향에 달려 있습니다.</p>
+      <p><b>세금</b><br>
+      미국 원천징수 15% 외에, 한국에서 <b>연 금융소득 2,000만원 초과</b> 시 금융소득종합과세 대상이 될 수 있습니다(월 167만원↑). 본 도구는 이를 반영하지 않습니다.</p>
+      <p><b>주가전망·배당률 수치는 참고용 가정치(2026-06 근사)</b>이며 미래 수익을 보장하지 않습니다. 본 도구는 투자 권유가 아닌 계산·시뮬레이션 보조이며 투자 책임은 본인에게 있습니다.</p>
     </div>
   </details>
 
@@ -224,157 +230,194 @@
 </div>
 
 <script>
-// ===== 큐레이션 데이터 (참고용 스냅샷, 수정 가능) =====
+// ===== 데이터 (참고용 가정치, 모두 수정 가능) =====
+// px 시세$, y 배당률%, pc 연 주가전망%, rk 위험, freq 배당주기, al 배분%
 const DEFAULTS = {
   hi: [
-    {tk:'SCHD', nm:'Schwab 미국 배당주', px:27.5, y:3.6, freq:'분기', al:30},
-    {tk:'VYM',  nm:'Vanguard 고배당',    px:133,  y:2.7, freq:'분기', al:15},
-    {tk:'DGRO', nm:'iShares 배당성장',   px:62,   y:2.3, freq:'분기', al:10},
-    {tk:'HDV',  nm:'iShares 고배당',     px:118,  y:3.4, freq:'분기', al:15},
-    {tk:'O',    nm:'Realty Income(리츠)',px:58,   y:5.4, freq:'월',   al:20},
-    {tk:'SPHD', nm:'Invesco 고배당저변동',px:50,  y:3.8, freq:'월',   al:10},
+    {tk:'SCHD',nm:'Schwab 미국배당주',px:27.5,y:3.6,pc:6,rk:'낮음',freq:'분기',al:30},
+    {tk:'VYM', nm:'Vanguard 고배당',  px:133, y:2.7,pc:5,rk:'낮음',freq:'분기',al:10},
+    {tk:'DGRO',nm:'iShares 배당성장',  px:62,  y:2.3,pc:6,rk:'낮음',freq:'분기',al:5},
+    {tk:'HDV', nm:'iShares 고배당',    px:118, y:3.4,pc:3,rk:'낮음',freq:'분기',al:10},
+    {tk:'O',   nm:'Realty Income 리츠',px:58,  y:5.4,pc:1,rk:'중간',freq:'월',  al:15},
+    {tk:'SPHD',nm:'고배당 저변동',     px:50,  y:3.8,pc:2,rk:'중간',freq:'월',  al:10},
+    {tk:'KO',  nm:'코카콜라',          px:70,  y:2.9,pc:5,rk:'낮음',freq:'분기',al:10},
+    {tk:'MO',  nm:'알트리아(담배)',    px:58,  y:7.0,pc:2,rk:'중간',freq:'분기',al:10},
   ],
   cc: [
-    {tk:'JEPI', nm:'JPM 프리미엄인컴',    px:58,   y:7.2,  freq:'월', al:30},
-    {tk:'JEPQ', nm:'JPM 나스닥 프리미엄', px:56,   y:9.8,  freq:'월', al:25},
-    {tk:'QYLD', nm:'Global X 나스닥100 CC',px:18,  y:11.8, freq:'월', al:15},
-    {tk:'XYLD', nm:'Global X S&P500 CC', px:42,   y:9.8,  freq:'월', al:10},
-    {tk:'DIVO', nm:'Amplify 배당+CC',     px:39,   y:4.6,  freq:'월', al:10},
-    {tk:'SVOL', nm:'Simplify 변동성숏',   px:22,   y:15.0, freq:'월', al:10},
+    {tk:'JEPI',nm:'JPM 프리미엄인컴',   px:58, y:7.2, pc:1, rk:'중간',freq:'월',al:25},
+    {tk:'JEPQ',nm:'JPM 나스닥 프리미엄',px:56, y:9.8, pc:2, rk:'중간',freq:'월',al:25},
+    {tk:'QYLD',nm:'나스닥100 커버드콜', px:18, y:11.8,pc:-3,rk:'높음',freq:'월',al:15},
+    {tk:'XYLD',nm:'S&P500 커버드콜',    px:42, y:9.8, pc:-1,rk:'높음',freq:'월',al:10},
+    {tk:'RYLD',nm:'러셀2000 커버드콜',  px:16, y:12.5,pc:-3,rk:'높음',freq:'월',al:5},
+    {tk:'DIVO',nm:'배당+커버드콜',      px:39, y:4.6, pc:4, rk:'중간',freq:'월',al:10},
+    {tk:'SVOL',nm:'변동성 숏 인컴',     px:22, y:15.0,pc:-2,rk:'높음',freq:'월',al:10},
+  ],
+  ho: [
+    {tk:'TSLY',nm:'YieldMax 테슬라',   px:9,  y:55,pc:-52,rk:'매우높음',freq:'월',al:20},
+    {tk:'NVDY',nm:'YieldMax 엔비디아', px:18, y:45,pc:-38,rk:'매우높음',freq:'월',al:20},
+    {tk:'MSTY',nm:'YieldMax MSTR',     px:24, y:80,pc:-72,rk:'매우높음',freq:'월',al:20},
+    {tk:'CONY',nm:'YieldMax 코인베이스',px:8, y:75,pc:-72,rk:'매우높음',freq:'월',al:15},
+    {tk:'YMAX',nm:'YieldMax 종합',     px:15, y:40,pc:-38,rk:'매우높음',freq:'월',al:15},
+    {tk:'ULTY',nm:'YieldMax 위클리',   px:7,  y:75,pc:-70,rk:'매우높음',freq:'월',al:10},
   ]
 };
+const TABMETA={hi:{nm:'· 고배당 안정',cls:'hi'},cc:{nm:'· 커버드콜',cls:'cc'},ho:{nm:'· 초고배당 (고위험)',cls:'ho'}};
+const RKCLS={'낮음':'rlow','중간':'rmid','높음':'rhigh','매우높음':'rxh'};
 
-let state = {
-  tab:'hi', mode:'A', tax:true,
-  data: load('div_data') || JSON.parse(JSON.stringify(DEFAULTS))
-};
+let state={tab:'hi',mode:'A',tax:true,sim:'wd',data:load('div_data2')||clone(DEFAULTS)};
+let lastTotal=0, lastRows=[];
 
+function clone(o){return JSON.parse(JSON.stringify(o))}
 function load(k){try{return JSON.parse(localStorage.getItem(k))}catch(e){return null}}
-function save(){localStorage.setItem('div_data', JSON.stringify(state.data))}
+function save(){localStorage.setItem('div_data2',JSON.stringify(state.data))}
+const num=v=>{const n=parseFloat(v);return isFinite(n)?n:0};
 
-// ===== 포맷터 =====
-function fmtKRW(won){
-  won = Math.round(won);
-  if(won<=0) return '0원';
-  const eok = Math.floor(won/1e8);
-  const man = Math.floor((won%1e8)/1e4);
-  if(eok>0) return `${eok}억${man>0?' '+man.toLocaleString()+'만':''}원`;
-  if(man>0) return `${man.toLocaleString()}만원`;
-  return `${won.toLocaleString()}원`;
-}
-function fmtWon(won){return Math.round(won).toLocaleString()+'원';}
+function fmtKRW(won){won=Math.round(won);
+  const neg=won<0;won=Math.abs(won);
+  let s;const eok=Math.floor(won/1e8),man=Math.floor((won%1e8)/1e4);
+  if(won<1)s='0원';else if(eok>0)s=`${eok}억${man>0?' '+man.toLocaleString()+'만':''}원`;
+  else if(man>0)s=`${man.toLocaleString()}만원`;else s=`${won.toLocaleString()}원`;
+  return (neg?'-':'')+s;}
+function fmtWon(won){return Math.round(won).toLocaleString()+'원'}
+function fx(){return Math.max(1,num(document.getElementById('fx').value)||1380)}
+function tf(){return state.tax?0.85:1}
 
-// ===== 핵심 계산 =====
-function fx(){return Math.max(1, parseFloat(document.getElementById('fx').value)||1380);}
-function taxFactor(){return state.tax?0.85:1;}
-
-function compute(){
-  const rows = state.data[state.tab];
-  const sumAl = rows.reduce((s,r)=>s+(parseFloat(r.al)||0),0);
-  // 가중 평균 배당률 (배분 가중)
-  let blendY = 0;
-  if(sumAl>0){
-    blendY = rows.reduce((s,r)=>s+(parseFloat(r.al)||0)*(parseFloat(r.y)||0),0)/sumAl;
-  }
-  return {rows, sumAl, blendY:blendY/100};
-}
-
-function render(){
-  const {rows, sumAl, blendY} = compute();
-  const f = fx(), tf = taxFactor();
-
-  // --- 종목별 결과 + 결과 패널 ---
-  let perStock = []; // {investKRW, monthlyKRW, shares}
-  let totalNeededKRW = 0, totalMonthlyKRW = 0;
-
-  if(state.mode==='A'){
-    // 목표 월배당 -> 필요 투자금
-    const targetMonthlyKRW = (parseFloat(document.getElementById('targetMan').value)||0)*1e4;
-    // 세금 ON이면 목표(세후)를 세전으로 환산
-    const preTaxMonthly = targetMonthlyKRW / tf;
-    const preTaxAnnual = preTaxMonthly*12;
-    totalNeededKRW = blendY>0 ? preTaxAnnual/blendY : 0;
-    rows.forEach(r=>{
-      const w = sumAl>0 ? (parseFloat(r.al)||0)/sumAl : 0;
-      const investKRW = totalNeededKRW*w;
-      const annualKRW = investKRW*(parseFloat(r.y)||0)/100;
-      const monthlyKRW = annualKRW*tf/12;
-      const shares = (parseFloat(r.px)>0) ? (investKRW/f)/parseFloat(r.px) : 0;
-      perStock.push({investKRW, monthlyKRW, shares});
-      totalMonthlyKRW += monthlyKRW;
-    });
-  } else {
-    // 투자금 -> 예상 월배당
-    const investTotalKRW = (parseFloat(document.getElementById('investMan').value)||0)*1e4;
-    totalNeededKRW = investTotalKRW;
-    rows.forEach(r=>{
-      const w = sumAl>0 ? (parseFloat(r.al)||0)/sumAl : 0;
-      const investKRW = investTotalKRW*w;
-      const annualKRW = investKRW*(parseFloat(r.y)||0)/100;
-      const monthlyKRW = annualKRW*tf/12;
-      const shares = (parseFloat(r.px)>0) ? (investKRW/f)/parseFloat(r.px) : 0;
-      perStock.push({investKRW, monthlyKRW, shares});
-      totalMonthlyKRW += monthlyKRW;
-    });
-  }
-
-  // --- 결과 패널 ---
-  const isCC = state.tab==='cc';
-  document.getElementById('result').className = 'result'+(isCC?' cc':'');
-  const taxLab = state.tax?'세후':'세전';
-  if(state.mode==='A'){
-    document.getElementById('resLab').textContent='필요한 총 투자금';
-    document.getElementById('resBig').textContent=fmtKRW(totalNeededKRW);
-    document.getElementById('resSub').innerHTML=
-      `매달 <b style="color:var(--green)">${fmtKRW(totalMonthlyKRW)}</b> 수령 (${taxLab}) · 가중배당 ${(blendY*100).toFixed(2)}%`;
-    document.getElementById('resRaw').textContent=`= ${fmtWon(totalNeededKRW)} · 환율 ${f.toLocaleString()}원 기준`;
-  } else {
-    document.getElementById('resLab').textContent=`예상 월 배당 (${taxLab} 실수령)`;
-    document.getElementById('resBig').innerHTML=`<span style="color:var(--green)">${fmtKRW(totalMonthlyKRW)}</span>`;
-    document.getElementById('resSub').innerHTML=
-      `연 ${fmtKRW(totalMonthlyKRW*12)} · 투자금 ${fmtKRW(totalNeededKRW)} · 가중배당 ${(blendY*100).toFixed(2)}%`;
-    document.getElementById('resRaw').textContent=`월 ${fmtWon(totalMonthlyKRW)} · 환율 ${f.toLocaleString()}원 기준`;
-  }
-
-  // --- 테이블 ---
-  const tb = document.getElementById('tbody');
+// ===== 테이블 빌드 (입력 행 — 탭전환/추가/삭제 때만) =====
+function buildTable(){
+  const rows=state.data[state.tab],tb=document.getElementById('tbody');
   tb.innerHTML='';
   rows.forEach((r,i)=>{
     const tr=document.createElement('tr');
-    const resCell = state.mode==='A'
-      ? `<div class="res">${fmtKRW(perStock[i].investKRW)}</div><small style="color:var(--dim)">${Math.floor(perStock[i].shares).toLocaleString()}주 · 월 ${fmtKRW(perStock[i].monthlyKRW)}</small>`
-      : `<div class="res">${fmtKRW(perStock[i].monthlyKRW)}</div><small style="color:var(--dim)">${Math.floor(perStock[i].shares).toLocaleString()}주 보유</small>`;
-    const freqBadge = r.freq==='월'?'<span class="badge mb">월</span>':'<span class="badge qb">분기</span>';
     tr.innerHTML=
-      `<td class="tk">${r.tk}${freqBadge}<small>${r.nm}</small></td>
+      `<td class="tk">
+         <span style="white-space:nowrap"><input class="tkin" value="${r.tk}" oninput="upd(${i},'tk',this.value)"><span class="rbadge ${RKCLS[r.rk]||'rmid'}">${r.rk}</span><button class="delx" onclick="delRow(${i})" title="삭제">✕</button></span>
+         <input class="nmin" value="${r.nm}" oninput="upd(${i},'nm',this.value)">
+         <span class="freq">${r.freq||''}배당</span>
+       </td>
        <td><input class="cellin" type="number" step="0.01" value="${r.px}" oninput="upd(${i},'px',this.value)"></td>
        <td><input class="cellin" type="number" step="0.1" value="${r.y}" oninput="upd(${i},'y',this.value)"></td>
+       <td><input class="cellin" type="number" step="0.5" value="${r.pc}" oninput="upd(${i},'pc',this.value)"><span class="navw" id="nav${i}"></span></td>
        <td><input class="cellin allocin" type="number" step="1" value="${r.al}" oninput="upd(${i},'al',this.value)"></td>
-       <td>${resCell}</td>`;
+       <td id="resCell${i}"></td>`;
     tb.appendChild(tr);
   });
-  document.getElementById('thRes').textContent = state.mode==='A'?'투자금/월배당':'월 배당';
+  update();
+}
 
-  // --- 합계바 ---
-  const sumEl=document.getElementById('allocSum');
-  sumEl.textContent=sumAl.toFixed(0)+'%';
-  const warn=document.getElementById('allocWarn');
-  if(Math.abs(sumAl-100)>0.5){
-    warn.textContent=`(100%로 정규화해 계산 중)`;
-    sumEl.style.color='var(--gold)';
-  }else{warn.textContent='';sumEl.style.color='var(--txt)';}
+// ===== 계산 + 결과 채우기 (입력마다, 포커스 유지) =====
+function update(){
+  const rows=state.data[state.tab];lastRows=rows;
+  const f=fx(),t=tf();
+  const sumAl=rows.reduce((s,r)=>s+num(r.al),0);
+  const blendY=sumAl>0?rows.reduce((s,r)=>s+num(r.al)*num(r.y),0)/sumAl/100:0;
+  const blendPc=sumAl>0?rows.reduce((s,r)=>s+num(r.al)*num(r.pc),0)/sumAl/100:0;
+
+  let total=0;
+  if(state.mode==='A'){
+    const target=num(document.getElementById('targetMan').value)*1e4;
+    total=blendY>0?(target/t)*12/blendY:0;
+  }else{
+    total=num(document.getElementById('investMan').value)*1e4;
+  }
+  lastTotal=total;
+
+  let totalMonthly=0,per=[];
+  rows.forEach(r=>{
+    const w=sumAl>0?num(r.al)/sumAl:0;
+    const inv=total*w;
+    const monthly=inv*num(r.y)/100*t/12;
+    const shares=num(r.px)>0?(inv/f)/num(r.px):0;
+    per.push({inv,monthly,shares});totalMonthly+=monthly;
+  });
+
+  // 결과 패널
+  const meta=TABMETA[state.tab];
+  document.getElementById('result').className='result '+meta.cls;
+  const taxLab=state.tax?'세후':'세전';
+  if(state.mode==='A'){
+    document.getElementById('resLab').textContent='필요한 총 투자금';
+    document.getElementById('resBig').textContent=fmtKRW(total);
+    document.getElementById('resSub').innerHTML=`매달 <b style="color:var(--green)">${fmtKRW(totalMonthly)}</b> 수령 (${taxLab}) · 가중배당 ${(blendY*100).toFixed(2)}%`;
+    document.getElementById('resRaw').textContent=`= ${fmtWon(total)} · 환율 ${f.toLocaleString()}원`;
+  }else{
+    document.getElementById('resLab').textContent=`예상 월 배당 (${taxLab} 실수령)`;
+    document.getElementById('resBig').innerHTML=`<span style="color:var(--green)">${fmtKRW(totalMonthly)}</span>`;
+    document.getElementById('resSub').innerHTML=`연 ${fmtKRW(totalMonthly*12)} · 투자금 ${fmtKRW(total)} · 가중배당 ${(blendY*100).toFixed(2)}%`;
+    document.getElementById('resRaw').textContent=`월 ${fmtWon(totalMonthly)} · 환율 ${f.toLocaleString()}원`;
+  }
+
+  // 종목별 결과 셀 + NAV 경고 (입력은 건드리지 않음)
+  rows.forEach((r,i)=>{
+    const c=document.getElementById('resCell'+i);if(!c)return;
+    if(state.mode==='A')
+      c.innerHTML=`<div class="res">${fmtKRW(per[i].inv)}</div><span class="sub2">${Math.floor(per[i].shares).toLocaleString()}주 · 월 ${fmtKRW(per[i].monthly)}</span>`;
+    else
+      c.innerHTML=`<div class="res">${fmtKRW(per[i].monthly)}</div><span class="sub2">${Math.floor(per[i].shares).toLocaleString()}주 보유</span>`;
+    const nav=document.getElementById('nav'+i);
+    if(nav)nav.textContent=num(r.pc)<=-5?'⚠ 원금감소':'';
+  });
+  document.getElementById('thRes').textContent=state.mode==='A'?'투자금 / 월배당':'월 배당';
+
+  // 총수익 관점 한 줄
+  const totRet=blendY+blendPc;
+  document.getElementById('totret').innerHTML=
+    `📐 총수익 관점: 가중배당 <b>${(blendY*100).toFixed(1)}%</b> + 가중 주가전망 <b style="color:${blendPc<0?'var(--red)':'var(--green)'}">${(blendPc*100).toFixed(1)}%</b> = 연 총수익 <b style="color:${totRet<0?'var(--red)':'var(--green)'}">${(totRet*100).toFixed(1)}%</b> <span style="color:var(--dim)">(세전·가정치)</span>`;
+
+  // 합계바
+  const se=document.getElementById('allocSum');se.textContent=sumAl.toFixed(0)+'%';
+  const w=document.getElementById('allocWarn');
+  if(Math.abs(sumAl-100)>0.5){w.textContent='(100%로 정규화해 계산)';se.style.color='var(--gold)';}
+  else{w.textContent='';se.style.color='var(--txt)';}
   document.getElementById('blendY').textContent=(blendY*100).toFixed(2)+'%';
+
+  runSim();
+}
+
+// ===== 총수익 시뮬레이션 =====
+function runSim(){
+  const rows=lastRows,total=lastTotal,t=tf();
+  const N=Math.max(1,Math.min(40,Math.round(num(document.getElementById('simN').value)||10)));
+  const sumAl=rows.reduce((s,r)=>s+num(r.al),0);
+  let finalPrincipal=0,cumDiv=0,reVal=0;
+  rows.forEach(r=>{
+    const w=sumAl>0?num(r.al)/sumAl:0,V0=total*w;
+    const g=num(r.pc)/100,d=num(r.y)/100;
+    let v=V0;for(let k=0;k<N;k++){cumDiv+=v*d*t;v=v*(1+g);}finalPrincipal+=v;
+    let rv=V0;for(let k=0;k<N;k++){rv=rv*(1+g)+rv*d*t;}reVal+=rv;
+  });
+  const grid=document.getElementById('simgrid');
+  const cls=v=>v>=0?'pos':'neg';
+  if(state.sim==='wd'){
+    const wealth=finalPrincipal+cumDiv,gain=wealth-total;
+    const avgYear=cumDiv/N,avgMonth=avgYear/12;
+    grid.innerHTML=
+      `<div class="simbox"><div class="l">시작 투자금</div><div class="v">${fmtKRW(total)}</div></div>
+       <div class="simbox"><div class="l">${N}년 누적 수령 배당(세후)</div><div class="v pos">${fmtKRW(cumDiv)}</div></div>
+       <div class="simbox"><div class="l">월 평균 수령(세후)</div><div class="v">${fmtKRW(avgMonth)}</div></div>
+       <div class="simbox"><div class="l">${N}년 후 원금 평가액</div><div class="v ${cls(finalPrincipal-total)}">${fmtKRW(finalPrincipal)}</div></div>
+       <div class="simbox full"><div class="l">총 자산 (원금 + 받은 배당) · 총수익</div><div class="v ${cls(gain)}">${fmtKRW(wealth)} <span style="font-size:15px">(${gain>=0?'+':''}${fmtKRW(gain)}, ${(gain/total*100).toFixed(0)}%)</span></div></div>`;
+    document.getElementById('simnote').innerHTML=
+      `💸 <b>인출</b>: 배당을 매년 생활비로 빼 쓰는 가정. 배당을 많이 줘도 '${N}년 후 원금 평가액'이 줄면(주가전망 음수) 총자산이 시작보다 낮을 수 있어요 — 이게 <b>고배당의 함정</b>입니다.`;
+  }else{
+    const gain=reVal-total,cagr=total>0?(Math.pow(reVal/total,1/N)-1):0;
+    grid.innerHTML=
+      `<div class="simbox"><div class="l">시작 투자금</div><div class="v">${fmtKRW(total)}</div></div>
+       <div class="simbox"><div class="l">${N}년 후 평가액(재투자)</div><div class="v ${cls(gain)}">${fmtKRW(reVal)}</div></div>
+       <div class="simbox"><div class="l">총수익</div><div class="v ${cls(gain)}">${gain>=0?'+':''}${fmtKRW(gain)}</div></div>
+       <div class="simbox"><div class="l">연 환산 수익률</div><div class="v ${cls(cagr)}">${(cagr*100).toFixed(1)}%</div></div>`;
+    document.getElementById('simnote').innerHTML=
+      `🔁 <b>재투자</b>: 받은 세후 배당으로 같은 종목을 더 사 복리. '주가전망%'에 NAV 침식을 반영해 넣었는지 꼭 확인하세요(초고배당은 크게 음수여야 현실적).`;
+  }
 }
 
 // ===== 이벤트 =====
-function upd(i,key,val){state.data[state.tab][i][key]=val;save();render();}
+function upd(i,key,val){state.data[state.tab][i][key]=val;save();update();}
 function switchTab(t){
   state.tab=t;
-  document.getElementById('ptHi').className='ptab'+(t==='hi'?' act hi':'');
-  document.getElementById('ptCc').className='ptab'+(t==='cc'?' act cc':'');
-  document.getElementById('modes').className='modes'+(t==='cc'?' cc':'');
-  document.getElementById('tabName').textContent = t==='hi'?'· 고배당 ETF':'· 커버드콜';
-  render();
+  ['hi','cc','ho'].forEach(x=>document.getElementById('pt'+x.charAt(0).toUpperCase()+x.slice(1)).className='ptab'+(x===t?' act '+x:''));
+  document.getElementById('modes').className='modes'+(t==='cc'?' cc':t==='ho'?' ho':'');
+  document.getElementById('tabName').textContent=TABMETA[t].nm;
+  buildTable();
 }
 function switchMode(m){
   state.mode=m;
@@ -382,28 +425,36 @@ function switchMode(m){
   document.getElementById('modeB').className='mode'+(m==='B'?' act':'');
   document.getElementById('inputA').style.display=m==='A'?'block':'none';
   document.getElementById('inputB').style.display=m==='B'?'block':'none';
-  render();
+  update();
+}
+function setSim(s){
+  state.sim=s;
+  document.getElementById('simWd').className=s==='wd'?'act':'';
+  document.getElementById('simRe').className=s==='re'?'act':'';
+  runSim();
+}
+function addRow(){
+  state.data[state.tab].push({tk:'종목',nm:'직접 입력',px:100,y:5,pc:0,rk:'중간',freq:'분기',al:0});
+  save();buildTable();
+}
+function delRow(i){
+  if(state.data[state.tab].length<=1)return alert('최소 1개 종목은 있어야 합니다.');
+  state.data[state.tab].splice(i,1);save();buildTable();
 }
 function evenSplit(){
-  const rows=state.data[state.tab];
-  const v=Math.round(100/rows.length);
-  rows.forEach((r,i)=>r.al = i===rows.length-1 ? 100-v*(rows.length-1) : v);
-  save();render();
+  const rows=state.data[state.tab],v=Math.round(100/rows.length);
+  rows.forEach((r,i)=>r.al=i===rows.length-1?100-v*(rows.length-1):v);
+  save();buildTable();
 }
 function resetData(){
-  if(confirm('현재 탭을 기본값으로 되돌릴까요? (수정한 시세·배당률·배분이 사라집니다)')){
-    state.data[state.tab]=JSON.parse(JSON.stringify(DEFAULTS[state.tab]));
-    save();render();
+  if(confirm('현재 탭을 기본값으로 되돌릴까요? (수정한 내용이 사라집니다)')){
+    state.data[state.tab]=clone(DEFAULTS[state.tab]);save();buildTable();
   }
 }
-document.getElementById('taxToggle').onclick=function(){
-  state.tax=!state.tax;
-  this.className='toggle'+(state.tax?' on':'');
-  render();
-};
-['fx','targetMan','investMan'].forEach(id=>document.getElementById(id).addEventListener('input',render));
+document.getElementById('taxToggle').onclick=function(){state.tax=!state.tax;this.className='toggle'+(state.tax?' on':'');update();};
+['fx','targetMan','investMan','simN'].forEach(id=>document.getElementById(id).addEventListener('input',update));
 
-render();
+buildTable();
 </script>
 </body>
 </html>
